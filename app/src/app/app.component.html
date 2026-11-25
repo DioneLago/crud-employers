@@ -1,0 +1,23 @@
+<header *ngIf="isAuthenticated" class="navbar navbar-expand-lg navbar-dark navbar-navy shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold py-2" role="button" (click)="goHome()">
+      Gestão de Funcionários
+    </a>
+
+    <div class="d-flex align-items-center gap-3">
+      <span *ngIf="username" class="badge rounded-pill bg-white bg-opacity-10 border border-light border-opacity-25 px-3 py-2 fw-normal">
+        Usuário: {{ username }}
+      </span>
+      <button type="button" class="btn btn-outline-light btn-sm" (click)="logout()" [disabled]="loggingOut">
+        {{ loggingOut ? 'Saindo...' : 'Sair' }}
+      </button>
+    </div>
+  </div>
+</header>
+
+<main [ngClass]="isAuthenticated ? 'container py-4' : ''">
+  <div *ngIf="isAuthenticated && logoutError" class="alert alert-danger" role="alert">
+    {{ logoutError }}
+  </div>
+  <router-outlet></router-outlet>
+</main>

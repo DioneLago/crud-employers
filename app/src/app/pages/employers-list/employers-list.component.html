@@ -1,0 +1,255 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 page-title mb-1">Funcionários</h1>
+  </div>
+
+  <button type="button" class="btn btn-primary fw-semibold" (click)="goToCreate()">
+    + Novo funcionário
+  </button>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card summary-card shadow-sm">
+      <div class="card-body">
+        <div class="text-uppercase small fw-semibold text-secondary">Total</div>
+        <div class="summary-value mt-1">{{ employers.length }}</div>
+        <div class="small text-secondary">Funcionários listados</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card summary-card shadow-sm">
+      <div class="card-body">
+        <div class="text-uppercase small fw-semibold text-secondary">Ativos</div>
+        <div class="summary-value mt-1">{{ activeCount }}</div>
+        <div class="small text-secondary">Sem data de demissão</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card summary-card shadow-sm">
+      <div class="card-body">
+        <div class="text-uppercase small fw-semibold text-secondary">Desligados</div>
+        <div class="summary-value mt-1">{{ inactiveCount }}</div>
+        <div class="small text-secondary">Com data de demissão</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-light-subtle">
+  <div class="card-body p-4">
+    <div class="row g-3 align-items-end mb-4">
+      <div class="col-md-5">
+        <label for="filter-search" class="form-label fw-semibold">Buscar por nome</label>
+        <input
+          id="filter-search"
+          type="text"
+          class="form-control"
+          placeholder="Digite o nome do funcionário..."
+          [(ngModel)]="search"
+          (ngModelChange)="loadEmployers()"
+        />
+      </div>
+
+      <div class="col-md-3">
+        <label for="filter-status" class="form-label fw-semibold">Situação</label>
+        <select
+          id="filter-status"
+          class="form-select"
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="loadEmployers()"
+        >
+          <option value="">Todos</option>
+          <option value="ativo">Ativo</option>
+          <option value="desligado">Desligado</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="filter-periodicity" class="form-label fw-semibold">Periodicidade</label>
+        <select
+          id="filter-periodicity"
+          class="form-select"
+          [(ngModel)]="periodicityFilter"
+          (ngModelChange)="loadEmployers()"
+        >
+          <option value="">Todas</option>
+          <option *ngFor="let option of periodicityOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-1 d-grid">
+        <button type="button" class="btn btn-outline-navy" (click)="clearFilters()">
+          Limpar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+
+    <div *ngIf="loading" class="text-center py-5 text-secondary">
+      Carregando funcionários...
+    </div>
+
+    <div *ngIf="!loading && employers.length === 0" class="text-center py-5 text-secondary">
+      <h2 class="h5 page-title">Nenhum funcionário encontrado</h2>
+      <p class="mb-0">
+        Revise os filtros ou clique em "+ Novo funcionário" para cadastrar.
+      </p>
+    </div>
+
+    <div *ngIf="!loading && employers.length > 0" class="table-responsive">
+      <table class="table table-hover align-middle table-navy mb-0">
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="sortBy === 'name' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'">
+              <button
+                type="button"
+                class="table-sort-button"
+                [class.sort-active]="sortBy === 'name'"
+                [attr.aria-label]="'Nome: ordenar ' + (sortBy === 'name' && sortOrder === 'asc' ? 'decrescente' : 'crescente')"
+                (click)="changeSort('name')"
+              >
+                Nome
+                <span class="sort-arrows" aria-hidden="true">
+                  <span [class.arrow-active]="sortBy === 'name' && sortOrder === 'asc'">▲</span>
+                  <span [class.arrow-active]="sortBy === 'name' && sortOrder === 'desc'">▼</span>
+                </span>
+              </button>
+            </th>
+            <th>Situação</th>
+            <th scope="col" [attr.aria-sort]="sortBy === 'admissionDate' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'">
+              <button
+                type="button"
+                class="table-sort-button"
+                [class.sort-active]="sortBy === 'admissionDate'"
+                [attr.aria-label]="'Admissão: ordenar ' + (sortBy === 'admissionDate' && sortOrder === 'asc' ? 'decrescente' : 'crescente')"
+                (click)="changeSort('admissionDate')"
+              >
+                Admissão
+                <span class="sort-arrows" aria-hidden="true">
+                  <span [class.arrow-active]="sortBy === 'admissionDate' && sortOrder === 'asc'">▲</span>
+                  <span [class.arrow-active]="sortBy === 'admissionDate' && sortOrder === 'desc'">▼</span>
+                </span>
+              </button>
+            </th>
+            <th scope="col" [attr.aria-sort]="sortBy === 'terminationDate' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'">
+              <button
+                type="button"
+                class="table-sort-button"
+                [class.sort-active]="sortBy === 'terminationDate'"
+                [attr.aria-label]="'Demissão: ordenar ' + (sortBy === 'terminationDate' && sortOrder === 'asc' ? 'decrescente' : 'crescente')"
+                (click)="changeSort('terminationDate')"
+              >
+                Demissão
+                <span class="sort-arrows" aria-hidden="true">
+                  <span [class.arrow-active]="sortBy === 'terminationDate' && sortOrder === 'asc'">▲</span>
+                  <span [class.arrow-active]="sortBy === 'terminationDate' && sortOrder === 'desc'">▼</span>
+                </span>
+              </button>
+            </th>
+            <th>Expediente</th>
+            <th>Horas/Dia</th>
+            <th>Dias trabalhados</th>
+            <th>Fechamento</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let employer of employers">
+            <td class="fw-semibold">{{ employer.name }}</td>
+            <td>
+              <span
+                class="badge rounded-pill"
+                [ngClass]="employer.terminationDate ? 'badge-inactive' : 'badge-active'"
+              >
+                {{ getStatus(employer.terminationDate) }}
+              </span>
+            </td>
+            <td>{{ formatDate(employer.admissionDate) }}</td>
+            <td>{{ formatDate(employer.terminationDate) }}</td>
+            <td>{{ employer.workStart }} - {{ employer.workEnd }}</td>
+            <td>{{ getDailyHoursText(employer) }}</td>
+            <td>{{ getWorkedDaysText(employer) }}</td>
+            <td>{{ employer.closingPeriodicity }}</td>
+            <td>
+              <div class="d-flex gap-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-navy btn-sm"
+                  (click)="goToDetail(employer._id)"
+                >
+                  Consultar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  (click)="goToEdit(employer._id)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  (click)="openDeleteModal(employer)"
+                >
+                  Excluir
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="employerToDelete" class="modal fade show d-block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title page-title">Confirmar exclusão</h5>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Fechar"
+          (click)="closeDeleteModal()"
+          [disabled]="deleting"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">
+          Deseja realmente excluir o funcionário <strong>{{ employerToDelete.name }}</strong>? Esta
+          ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-navy"
+          (click)="closeDeleteModal()"
+          [disabled]="deleting"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="confirmDelete()"
+          [disabled]="deleting"
+        >
+          {{ deleting ? 'Excluindo...' : 'Excluir funcionário' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="employerToDelete" class="modal-backdrop fade show"></div>

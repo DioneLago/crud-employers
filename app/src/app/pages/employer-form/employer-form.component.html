@@ -1,0 +1,281 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 page-title mb-1">
+      {{ isEditing ? 'Editar funcionário' : 'Cadastrar funcionário' }}
+    </h1>
+    <p class="text-secondary mb-0">
+      Preencha os campos abaixo. Os cálculos automáticos são exibidos conforme o preenchimento.
+    </p>
+  </div>
+
+  <button type="button" class="btn btn-outline-navy" (click)="cancel()">
+    Voltar para a lista
+  </button>
+</div>
+
+<div *ngIf="loading" class="card shadow-sm">
+  <div class="card-body text-center py-5 text-secondary">
+    Carregando dados do funcionário...
+  </div>
+</div>
+
+<div *ngIf="!loading" class="row g-4 align-items-start">
+  <div class="col-lg-7">
+    <form class="card shadow-sm" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="card-body p-4">
+        <div *ngIf="serverError" class="alert alert-danger" role="alert">
+          {{ serverError }}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label for="name" class="form-label fw-semibold">
+              Nome <span class="text-danger">*</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('name')"
+              placeholder="Ex.: Maria Oliveira"
+              formControlName="name"
+            />
+            <div *ngIf="isFieldInvalid('name')" class="invalid-feedback">
+              {{ getFieldError('name') }}
+            </div>
+            <div *ngIf="!isFieldInvalid('name')" class="form-text">
+              Obrigatório; não pode conter números.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="admissionDate" class="form-label fw-semibold">
+              Data de admissão <span class="text-danger">*</span>
+            </label>
+            <input
+              id="admissionDate"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('admissionDate')"
+              formControlName="admissionDate"
+            />
+            <div *ngIf="isFieldInvalid('admissionDate')" class="invalid-feedback">
+              {{ getFieldError('admissionDate') }}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="terminationDate" class="form-label fw-semibold">Data de demissão</label>
+            <input
+              id="terminationDate"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('terminationDate')"
+              formControlName="terminationDate"
+            />
+            <div *ngIf="isFieldInvalid('terminationDate')" class="invalid-feedback">
+              {{ getFieldError('terminationDate') }}
+            </div>
+            <div *ngIf="!isFieldInvalid('terminationDate')" class="form-text">
+              Opcional. Deixe em branco para funcionário ativo.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="workStart" class="form-label fw-semibold">
+              Hora de início do expediente <span class="text-danger">*</span>
+            </label>
+            <input
+              id="workStart"
+              type="time"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('workStart')"
+              formControlName="workStart"
+            />
+            <div *ngIf="isFieldInvalid('workStart')" class="invalid-feedback">
+              {{ getFieldError('workStart') }}
+            </div>
+            <div *ngIf="!isFieldInvalid('workStart')" class="form-text">
+              Formato HH:mm (ex.: 08:00).
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="workEnd" class="form-label fw-semibold">
+              Hora de fim do expediente <span class="text-danger">*</span>
+            </label>
+            <input
+              id="workEnd"
+              type="time"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('workEnd')"
+              formControlName="workEnd"
+            />
+            <div *ngIf="isFieldInvalid('workEnd')" class="invalid-feedback">
+              {{ getFieldError('workEnd') }}
+            </div>
+            <div *ngIf="!isFieldInvalid('workEnd')" class="form-text">
+              Formato HH:mm, no mesmo dia (ex.: 17:00).
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label for="closingPeriodicity" class="form-label fw-semibold">
+              Periodicidade do fechamento <span class="text-danger">*</span>
+            </label>
+            <select
+              id="closingPeriodicity"
+              class="form-select"
+              [class.is-invalid]="isFieldInvalid('closingPeriodicity')"
+              formControlName="closingPeriodicity"
+            >
+              <option *ngFor="let option of periodicityOptions" [value]="option">
+                {{ option }}
+              </option>
+            </select>
+            <div *ngIf="isFieldInvalid('closingPeriodicity')" class="invalid-feedback">
+              {{ getFieldError('closingPeriodicity') }}
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="d-flex justify-content-end gap-2">
+          <button
+            type="button"
+            class="btn btn-outline-navy"
+            (click)="cancel()"
+            [disabled]="saving"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary fw-semibold" [disabled]="saving">
+            {{ isEditing ? 'Salvar alterações' : 'Cadastrar funcionário' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-5">
+    <aside class="calc-panel p-4 shadow">
+      <h2 class="h5 fw-bold mb-1">Cálculos automáticos</h2>
+      <p class="small text-light opacity-75 mb-3">
+        O resumo é atualizado conforme você preenche os campos.
+      </p>
+
+      <div class="d-flex flex-column gap-2">
+        <div class="calc-item p-3 d-flex justify-content-between align-items-center gap-2">
+          <span class="small text-light opacity-75">Situação</span>
+          <strong>{{ hasTerminationDate ? 'Desligado' : 'Ativo' }}</strong>
+        </div>
+
+        <div class="calc-item p-3 d-flex justify-content-between align-items-center gap-2">
+          <span class="small text-light opacity-75">Horas trabalhadas por dia</span>
+          <strong>{{ dailyHours ? dailyHours.formatted : 'Informe início e fim' }}</strong>
+        </div>
+
+        <div
+          *ngIf="workedDays !== null"
+          class="calc-item p-3 d-flex justify-content-between align-items-center gap-2"
+        >
+          <span class="small text-light opacity-75">Total de dias trabalhados</span>
+          <strong>{{ workedDays.formatted }}</strong>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div *ngIf="confirmOpen" class="modal fade show d-block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title page-title">
+          {{ isEditing ? 'Confirmar alterações' : 'Confirmar cadastro' }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Fechar"
+          (click)="closeConfirmModal()"
+          [disabled]="saving"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary">
+          {{
+            isEditing
+              ? 'Confira os dados antes de salvar as alterações.'
+              : 'Confira os dados antes de cadastrar o funcionário.'
+          }}
+        </p>
+
+        <ul class="list-group list-group-flush border rounded">
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Nome</span>
+            <strong>{{ form.get('name')?.value?.trim() }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Data de admissão</span>
+            <strong>{{ formatDate(form.get('admissionDate')?.value) }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Data de demissão</span>
+            <strong>
+              {{
+                hasTerminationDate
+                  ? formatDate(form.get('terminationDate')?.value)
+                  : 'Não informada (Ativo)'
+              }}
+            </strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Expediente</span>
+            <strong>
+              {{ form.get('workStart')?.value }} às {{ form.get('workEnd')?.value }}
+            </strong>
+          </li>
+          <li *ngIf="dailyHours" class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Horas trabalhadas por dia</span>
+            <strong>{{ dailyHours.formatted }}</strong>
+          </li>
+          <li *ngIf="workedDays !== null" class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Total de dias trabalhados</span>
+            <strong>{{ workedDays.formatted }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="text-secondary">Periodicidade do fechamento</span>
+            <strong>{{ form.get('closingPeriodicity')?.value }}</strong>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-navy"
+          (click)="closeConfirmModal()"
+          [disabled]="saving"
+        >
+          Voltar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="confirmSave()"
+          [disabled]="saving"
+        >
+          {{
+            saving
+              ? 'Salvando...'
+              : isEditing
+              ? 'Salvar alterações'
+              : 'Cadastrar funcionário'
+          }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="confirmOpen" class="modal-backdrop fade show"></div>

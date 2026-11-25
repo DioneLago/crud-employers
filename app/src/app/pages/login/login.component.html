@@ -1,0 +1,52 @@
+<div class="login-wrapper d-flex flex-column align-items-center justify-content-center p-3">
+  <div class="card shadow-lg border-0 rounded-4 w-100" style="max-width: 420px;">
+    <div class="card-body p-4 p-md-5">
+      <div class="text-center mb-4">
+        <span class="badge rounded-pill login-badge px-3 py-2 mb-2">
+          Gestão de Funcionários
+        </span>
+        <h1 class="h3 page-title mb-1">Acessar sistema</h1>
+        <p class="text-secondary small mb-0">
+          Entre com suas credenciais para gerenciar o cadastro de funcionários.
+        </p>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger py-2 small" role="alert">
+        {{ error }}
+      </div>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="username" class="form-label fw-semibold">Usuário</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            class="form-control"
+            placeholder="Digite seu usuário"
+            [(ngModel)]="username"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold">Senha</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="form-control"
+            placeholder="Digite sua senha"
+            [(ngModel)]="password"
+            autocomplete="current-password"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-semibold" [disabled]="loading">
+          {{ loading ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
